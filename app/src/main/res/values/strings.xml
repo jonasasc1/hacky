@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">NetAudit</string>
+
+    <string name="consent_title">Nur für autorisiertes Testen</string>
+    <string name="consent_body">NetAudit ist ein Werkzeug zur Netzwerk-Analyse (Host-Erkennung, Port-Scan, Dienst-Erkennung).\n\nVerwende es ausschließlich in Netzwerken, die dir selbst gehören oder für die du eine ausdrückliche, möglichst schriftliche Erlaubnis hast.\n\nDas Scannen oder der Zugriff auf fremde Systeme ohne Erlaubnis ist in den meisten Ländern strafbar (u. a. in Österreich §118a, §119, §119a StGB; in Deutschland §202a–c StGB). Du allein bist für deine Nutzung verantwortlich.\n\nDie App schneidet keinen fremden Datenverkehr mit. Sie führt aktive Abfragen an Hosts im Netz aus.</string>
+    <string name="consent_check">Ich habe die Erlaubnis, die von mir gescannten Netzwerke zu testen, und handle verantwortungsvoll.</string>
+    <string name="consent_accept">Verstanden und bestätigt</string>
+
+    <string name="scan_network">Netzwerk scannen</string>
+    <string name="stop">Stopp</string>
+    <string name="hosts_found">Gefundene Hosts</string>
+    <string name="scan_ports">Ports scannen</string>
+    <string name="common_ports">Gängige Ports</string>
+    <string name="port_range">Port-Bereich</string>
+    <string name="open_ports">Offene Ports</string>
+    <string name="no_network">Mit keinem WLAN verbunden. Verbinde dich zuerst mit einem Netzwerk.</string>
+</resources>
