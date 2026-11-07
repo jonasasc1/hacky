@@ -2,10 +2,13 @@ package com.netaudit.scanner
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.netaudit.scanner.databinding.ActivityPortscanBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,6 +21,21 @@ class PortScanActivity : AppCompatActivity() {
     private lateinit var adapter: PortAdapter
     private var job: Job? = null
     private lateinit var ip: String
+    private var pendingExport: ByteArray? = null
+
+    private val createDoc = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        val data = pendingExport
+        pendingExport = null
+        if (uri == null || data == null) return@registerForActivityResult
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(data) }
+            toast(getString(R.string.exported))
+        } catch (_: Exception) {
+            toast(getString(R.string.export_failed))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +62,31 @@ class PortScanActivity : AppCompatActivity() {
 
         binding.startScan.setOnClickListener { startScan() }
         binding.stopScan.setOnClickListener { stopScan() }
+        binding.exportPorts.setOnClickListener { exportPorts() }
     }
+
+    private fun exportPorts() {
+        val ports = adapter.snapshot()
+        if (ports.isEmpty()) {
+            toast(getString(R.string.nothing_to_export)); return
+        }
+        val ts = System.currentTimeMillis()
+        val safeIp = ip.replace('.', '-')
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.export_choose)
+            .setItems(arrayOf("CSV", "JSON")) { _, which ->
+                if (which == 0) {
+                    pendingExport = Exporter.portsCsv(ip, ports).toByteArray()
+                    createDoc.launch("netaudit-ports-$safeIp-$ts.csv")
+                } else {
+                    pendingExport = Exporter.portsJson(ip, ports).toByteArray()
+                    createDoc.launch("netaudit-ports-$safeIp-$ts.json")
+                }
+            }
+            .show()
+    }
+
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
     private fun resolvePorts(): List<Int>? {
         return if (binding.modeGroup.checkedButtonId == binding.modeRange.id) {

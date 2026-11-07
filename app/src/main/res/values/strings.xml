@@ -14,4 +14,14 @@
     <string name="port_range">Port-Bereich</string>
     <string name="open_ports">Offene Ports</string>
     <string name="no_network">Mit keinem WLAN verbunden. Verbinde dich zuerst mit einem Netzwerk.</string>
+
+    <string name="discover_services">Dienste finden</string>
+    <string name="discovery_title">Dienst-Erkennung</string>
+    <string name="discovery_hint">Findet Geräte, die auf Ping/Port-Scan nicht reagieren: mDNS/DNS-SD (Drucker, Chromecast, AirPlay, HomeKit, SMB …) und SSDP/UPnP (Router, Smart-TVs, NAS, IoT).</string>
+    <string name="discovered">Gefundene Dienste/Geräte</string>
+    <string name="export">Export</string>
+    <string name="export_choose">Als welches Format exportieren?</string>
+    <string name="nothing_to_export">Nichts zu exportieren – zuerst scannen.</string>
+    <string name="exported">Exportiert.</string>
+    <string name="export_failed">Export fehlgeschlagen.</string>
 </resources>

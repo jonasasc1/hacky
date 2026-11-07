@@ -5,12 +5,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.netaudit.scanner.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,9 +25,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: HostAdapter
     private var scanJob: Job? = null
 
+    private var pendingExport: ByteArray? = null
+
     private val locationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { showNetworkInfo() }
+
+    private val createDoc = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        val data = pendingExport
+        pendingExport = null
+        if (uri == null || data == null) return@registerForActivityResult
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(data) }
+            toast(getString(R.string.exported))
+        } catch (_: Exception) {
+            toast(getString(R.string.export_failed))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +63,13 @@ class MainActivity : AppCompatActivity() {
 
         binding.scanButton.setOnClickListener { startScan() }
         binding.stopButton.setOnClickListener { stopScan() }
+        binding.discoveryButton.setOnClickListener {
+            startActivity(Intent(this, DiscoveryActivity::class.java))
+        }
+        binding.exportButton.setOnClickListener { exportHosts() }
+
+        // Preload the offline OUI vendor database off the UI thread.
+        lifecycleScope.launch(Dispatchers.IO) { OuiLookup.ensureLoaded(applicationContext) }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
@@ -113,6 +138,28 @@ class MainActivity : AppCompatActivity() {
         binding.stopButton.isEnabled = active
         binding.progress.visibility = if (active) View.VISIBLE else View.INVISIBLE
     }
+
+    private fun exportHosts() {
+        val hosts = adapter.snapshot()
+        if (hosts.isEmpty()) {
+            toast(getString(R.string.nothing_to_export)); return
+        }
+        val ts = System.currentTimeMillis()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.export_choose)
+            .setItems(arrayOf("CSV", "JSON")) { _, which ->
+                if (which == 0) {
+                    pendingExport = Exporter.hostsCsv(hosts).toByteArray()
+                    createDoc.launch("netaudit-hosts-$ts.csv")
+                } else {
+                    pendingExport = Exporter.hostsJson(hosts).toByteArray()
+                    createDoc.launch("netaudit-hosts-$ts.json")
+                }
+            }
+            .show()
+    }
+
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
     override fun onDestroy() {
         scanJob?.cancel()

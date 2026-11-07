@@ -29,6 +29,7 @@ data class Host(
     val ipInt: Int,
     var hostname: String? = null,
     var mac: String? = null,
+    var vendor: String? = null,
     var isGateway: Boolean = false
 )
 
@@ -177,6 +178,7 @@ object NetworkUtils {
                         if (up) {
                             val host = Host(ip = ipStr, ipInt = ipInt)
                             host.mac = arp[ipStr]
+                            host.vendor = OuiLookup.vendor(host.mac)
                             host.isGateway = (ipStr == gatewayIp)
                             host.hostname = withTimeoutOrNull(500) {
                                 val n = intToInet(ipInt).canonicalHostName

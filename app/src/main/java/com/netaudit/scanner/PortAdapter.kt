@@ -27,6 +27,8 @@ class PortAdapter : RecyclerView.Adapter<PortAdapter.VH>() {
 
     fun count() = items.size
 
+    fun snapshot(): List<OpenPort> = ArrayList(items)
+
     inner class VH(val b: ItemPortBinding) : RecyclerView.ViewHolder(b.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {

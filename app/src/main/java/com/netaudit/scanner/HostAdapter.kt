@@ -28,6 +28,8 @@ class HostAdapter(
 
     fun count() = items.size
 
+    fun snapshot(): List<Host> = ArrayList(items)
+
     inner class VH(val b: ItemHostBinding) : RecyclerView.ViewHolder(b.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -40,8 +42,15 @@ class HostAdapter(
         holder.b.hostIp.text = if (h.isGateway) "${h.ip}  (Gateway)" else h.ip
         holder.b.hostName.text = h.hostname ?: ""
         holder.b.hostName.visibility = if (h.hostname.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
-        holder.b.hostMac.text = h.mac ?: ""
-        holder.b.hostMac.visibility = if (h.mac.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
+        val mac = h.mac
+        val vendor = h.vendor
+        val macLine = when {
+            mac != null && vendor != null -> "$mac  •  $vendor"
+            mac != null -> mac
+            else -> ""
+        }
+        holder.b.hostMac.text = macLine
+        holder.b.hostMac.visibility = if (macLine.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
         holder.b.root.setOnClickListener { onClick(h) }
     }
 

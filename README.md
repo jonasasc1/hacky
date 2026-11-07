@@ -15,9 +15,19 @@ eine ausdrückliche Erlaubnis hast**.
 - **Host-Discovery**: Ping-Sweep (`InetAddress.isReachable`) + TCP-Knock auf gängige
   Ports + ARP-Tabelle (`/proc/net/arp`, soweit vom OS erlaubt). Hostnamen per
   Reverse-DNS. Subnetze > /24 werden auf das eigene /24 begrenzt.
+- **MAC-Vendor-Lookup**: Offline-Herstellererkennung über die gebündelte
+  IEEE-OUI-Datenbank (`assets/oui.txt`, ~40 000 Einträge aus der Wireshark-
+  „manuf"-Registry). Keine Internet-Abfrage nötig.
 - **Port-Scan pro Host**: TCP-Connect-Scan über *gängige Ports* oder einen
   frei wählbaren *Bereich* (bis 20 000 Ports). Banner-Grab (HTTP `HEAD`, rohe
   Service-Banner) und Dienst-Zuordnung nach Portnummer.
+- **Dienst-Erkennung (mDNS/DNS-SD + SSDP/UPnP)**: findet Geräte, die auf
+  Ping/Port-Scan nicht reagieren – Drucker, Chromecast, AirPlay, HomeKit, SMB,
+  Router, Smart-TVs, NAS, IoT. Eigener mDNS-Parser (keine Fremd-Bibliothek),
+  SSDP per `M-SEARCH`-Multicast, mit Wi-Fi-Multicast-Lock.
+- **Export**: Host-Liste und Port-Scan-Ergebnisse als **CSV** oder **JSON**
+  über den Android-Dateidialog (Storage Access Framework, keine Speicher-
+  Berechtigung nötig).
 
 ### Was die App bewusst NICHT tut
 Sie schneidet **keinen fremden Datenverkehr** mit. Auf nicht gerooteten Android-Geräten
@@ -38,6 +48,37 @@ echo "sdk.dir=/pfad/zum/Android/sdk" > local.properties
 ```
 
 In **Android Studio**: Projekt öffnen → *Run* oder *Build > Build APK(s)*.
+
+### Signierte Release-APK
+
+Das Projekt signiert den Release-Build automatisch, **wenn** eine Datei
+`keystore.properties` im Projekt-Root liegt (sie ist bewusst in `.gitignore`,
+damit Keystore und Passwörter **nie** ins Git geraten). Format:
+
+```properties
+storeFile=netaudit-release.jks
+storePassword=DEIN_STORE_PASSWORT
+keyAlias=netaudit
+keyPassword=DEIN_KEY_PASSWORT
+```
+
+Keystore einmalig selbst erzeugen (empfohlen für echte Nutzung):
+
+```bash
+keytool -genkeypair -v -keystore netaudit-release.jks -alias netaudit \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Dann:
+
+```bash
+./gradlew :app:assembleRelease
+# -> app/build/outputs/apk/release/app-release.apk
+```
+
+Ohne `keystore.properties` wird der Release-Build **unsigniert** erzeugt
+(CI-tauglich). **Bewahre den Keystore sicher auf** – geht er verloren, kannst
+du keine App-Updates mehr unter derselben Signatur veröffentlichen.
 
 ## Installieren
 
@@ -64,10 +105,14 @@ installieren (Installation aus unbekannten Quellen erlauben).
 | Datei | Aufgabe |
 |---|---|
 | `ConsentActivity` | Einmaliger Zustimmungs-Screen |
-| `MainActivity` | Netzwerk-Info + Host-Discovery-Liste |
-| `PortScanActivity` | Port-Scan für einen gewählten Host |
+| `MainActivity` | Netzwerk-Info + Host-Discovery-Liste + Export |
+| `PortScanActivity` | Port-Scan für einen gewählten Host + Export |
+| `DiscoveryActivity` | mDNS/DNS-SD- und SSDP/UPnP-Dienst-Erkennung |
 | `NetworkUtils` | WLAN-Info, Subnetz-Berechnung, Host-Discovery (Coroutines) |
 | `PortScanner` | TCP-Connect-Scan, Banner-Grab, Dienst-Map |
+| `ServiceDiscovery` | mDNS-Query/-Parser + SSDP-`M-SEARCH`, Multicast-Lock |
+| `OuiLookup` | Offline-MAC-Vendor-Lookup aus `assets/oui.txt` |
+| `Exporter` | CSV-/JSON-Serialisierung der Ergebnisse |
 
 Reines Kotlin + Android Views (Material 3), Nebenläufigkeit über Kotlin-Coroutines
 (begrenzte Parallelität via `Semaphore`). Keine Drittanbieter-Scan-Bibliotheken.

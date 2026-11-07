@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Required to read the current Wi-Fi SSID on Android 8.1+ -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Required for mDNS / SSDP multicast discovery -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
     <application
         android:allowBackup="true"
@@ -34,6 +36,12 @@
         <activity
             android:name=".PortScanActivity"
             android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".DiscoveryActivity"
+            android:exported="false"
+            android:label="@string/discovery_title"
             android:parentActivityName=".MainActivity" />
     </application>
 </manifest>
