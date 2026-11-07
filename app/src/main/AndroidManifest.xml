@@ -49,5 +49,11 @@
             android:exported="false"
             android:label="@string/full_audit"
             android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:label="@string/history"
+            android:parentActivityName=".MainActivity" />
     </application>
 </manifest>

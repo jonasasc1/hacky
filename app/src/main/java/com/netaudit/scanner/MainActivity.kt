@@ -70,6 +70,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, DiscoveryActivity::class.java))
         }
         binding.exportButton.setOnClickListener { exportHosts() }
+        binding.historyButton.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
 
         // Preload the offline OUI vendor database off the UI thread.
         lifecycleScope.launch(Dispatchers.IO) { OuiLookup.ensureLoaded(applicationContext) }

@@ -20,7 +20,8 @@ data class Finding(
 /** One host with the TCP ports found open on it. */
 data class HostAudit(
     val host: Host,
-    val openPorts: MutableList<OpenPort> = ArrayList()
+    val openPorts: MutableList<OpenPort> = ArrayList(),
+    val udpPorts: MutableList<String> = ArrayList()   // e.g. "53/DNS", "123/NTP"
 )
 
 data class AuditResult(

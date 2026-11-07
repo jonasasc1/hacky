@@ -30,4 +30,6 @@
     <string name="report">Report</string>
     <string name="report_format">Report-Format wählen</string>
     <string name="findings">Findings</string>
+    <string name="history">Scan-Verlauf</string>
+    <string name="no_history">Noch keine Scans gespeichert.\nStarte einen „Vollständigen Audit".</string>
 </resources>

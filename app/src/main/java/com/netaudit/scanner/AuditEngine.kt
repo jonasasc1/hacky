@@ -72,6 +72,14 @@ object AuditEngine {
             // SNMP default-community check (UDP)
             SecurityProbes.snmpPublicCheck(ha.host.ip)?.let { addFinding(result, it, cb) }
 
+            // UDP service probes (DNS/NTP/NetBIOS)
+            val udp = UdpScanner.scan(ha.host.ip)
+            if (udp.labels.isNotEmpty()) {
+                synchronized(result) { ha.udpPorts.addAll(udp.labels) }
+                cb.log("  UDP ${ha.host.ip}: ${udp.labels.joinToString(", ")}")
+            }
+            for (uf in udp.findings) addFinding(result, uf, cb)
+
             PortScanner.scan(ha.host.ip, PortScanner.COMMON_PORTS.toList(),
                 onOpen = { op ->
                     synchronized(result) { ha.openPorts.add(op) }

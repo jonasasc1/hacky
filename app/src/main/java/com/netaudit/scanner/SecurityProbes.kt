@@ -53,8 +53,7 @@ object SecurityProbes {
                     "MongoDB erreichbar. Authentifizierung und Bind-Adresse prüfen.", "Dienst")
                 3389 -> f += Finding(Severity.LOW, "RDP offen", ip, 3389,
                     "Remote Desktop erreichbar. NLA erzwingen, Zugriff einschränken.", "Dienst")
-                445 -> f += Finding(Severity.LOW, "SMB offen", ip, 445,
-                    "Dateifreigabe erreichbar. SMBv1 deaktivieren, Signierung erzwingen.", "Dienst")
+                445 -> f += smbProbe(ip, op)
             }
         } catch (_: Exception) {
         }
@@ -96,7 +95,87 @@ object SecurityProbes {
             f += Finding(Severity.INFO, "Server-Version offengelegt", ip, op.port,
                 "Server-Header: $server", "Information")
         }
+        deviceHint(server, title)?.let { hint ->
+            f += Finding(Severity.INFO, "Admin-/Geräte-Oberfläche erkannt", ip, op.port,
+                "$hint. Standard-Zugangsdaten ändern und Zugriff einschränken.", "Information")
+        }
         return f
+    }
+
+    private val DEVICE_HINTS = mapOf(
+        "fritz" to "FRITZ!Box-Router", "tp-link" to "TP-Link-Gerät", "tplink" to "TP-Link-Gerät",
+        "routeros" to "MikroTik RouterOS", "dd-wrt" to "DD-WRT-Router", "openwrt" to "OpenWrt-Router",
+        "ubnt" to "Ubiquiti-Gerät", "unifi" to "Ubiquiti UniFi", "hikvision" to "Hikvision-Kamera",
+        "dahua" to "Dahua-Kamera", "axis" to "Axis-Kamera", "jenkins" to "Jenkins (CI)",
+        "grafana" to "Grafana", "phpmyadmin" to "phpMyAdmin", "synology" to "Synology NAS",
+        "qnap" to "QNAP NAS", "printer" to "Drucker-Weboberfläche", "jetdirect" to "HP-Drucker",
+        "webmin" to "Webmin", "pi-hole" to "Pi-hole", "proxmox" to "Proxmox"
+    )
+
+    private fun deviceHint(server: String?, title: String?): String? {
+        val hay = ("${server ?: ""} ${title ?: ""}").lowercase()
+        for ((k, v) in DEVICE_HINTS) if (hay.contains(k)) return v
+        return null
+    }
+
+    // ---- SMB / SMBv1 ----
+    private fun smbProbe(ip: String, op: OpenPort): List<Finding> {
+        val f = ArrayList<Finding>()
+        f += Finding(Severity.LOW, "SMB-Dateifreigabe offen", ip, 445,
+            "Port 445 erreichbar. Zugriff einschränken und SMB-Signierung erzwingen.", "Dienst")
+        try {
+            Socket().use { s ->
+                s.connect(InetSocketAddress(ip, 445), 2000)
+                s.soTimeout = 2000
+                val req = smbv1NegotiatePacket()
+                s.getOutputStream().write(req); s.getOutputStream().flush()
+                val buf = ByteArray(512)
+                val n = s.getInputStream().read(buf)
+                if (n > 8) {
+                    // NetBIOS(4) + SMB header: 0xFF 'S' 'M' 'B', command 0x72 = negotiate response
+                    val smb = n > 8 && buf[4].toInt() and 0xff == 0xFF &&
+                        buf[5].toInt() == 'S'.code && buf[6].toInt() == 'M'.code &&
+                        buf[7].toInt() == 'B'.code && buf[8].toInt() and 0xff == 0x72
+                    if (smb) {
+                        op.insecure = true; op.info = "SMBv1 aktiv"
+                        f += Finding(Severity.HIGH, "SMBv1 aktiviert", ip, 445,
+                            "Der Server antwortet auf das veraltete SMBv1-Protokoll (EternalBlue-Risiko). SMBv1 deaktivieren.", "Dienst")
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+        return f
+    }
+
+    private fun smbv1NegotiatePacket(): ByteArray {
+        val dialects = listOf(
+            "PC NETWORK PROGRAM 1.0", "LANMAN1.0", "Windows for Workgroups 3.1a",
+            "LM1.2X002", "LANMAN2.1", "NT LM 0.12"
+        )
+        val body = ByteArrayOutputStream()
+        for (d in dialects) { body.write(0x02); body.write(d.toByteArray()); body.write(0) }
+        val bytes = body.toByteArray()
+        val smb = ByteArrayOutputStream()
+        smb.write(0xFF); smb.write('S'.code); smb.write('M'.code); smb.write('B'.code)
+        smb.write(0x72)                                   // COM_NEGOTIATE
+        smb.write(byteArrayOf(0, 0, 0, 0))                // status
+        smb.write(0x18); smb.write(byteArrayOf(0x01, 0x28)) // flags, flags2
+        smb.write(ByteArray(12))                          // pidHigh + signature
+        smb.write(ByteArray(2))                           // reserved
+        smb.write(ByteArray(2)); smb.write(ByteArray(2))  // tid, pid
+        smb.write(ByteArray(2)); smb.write(ByteArray(2))  // uid, mid
+        smb.write(0x00)                                   // word count
+        smb.write(bytes.size and 0xff); smb.write((bytes.size ushr 8) and 0xff) // byte count
+        smb.write(bytes)
+        val smbBytes = smb.toByteArray()
+        val out = ByteArrayOutputStream()
+        out.write(0x00)                                   // NetBIOS session message
+        out.write((smbBytes.size ushr 16) and 0xff)
+        out.write((smbBytes.size ushr 8) and 0xff)
+        out.write(smbBytes.size and 0xff)
+        out.write(smbBytes)
+        return out.toByteArray()
     }
 
     private data class HttpResp(val status: Int, val headers: Map<String, String>, val title: String?)

@@ -60,12 +60,35 @@ class AuditActivity : AppCompatActivity(), AuditEngine.Callbacks {
         binding.summary.text = "Audit läuft …"
         job = lifecycleScope.launch(Dispatchers.Default) {
             try {
-                result = AuditEngine.run(applicationContext, this@AuditActivity)
+                val r = AuditEngine.run(applicationContext, this@AuditActivity)
+                result = r
+                if (r != null && r.finishedAt != 0L) {
+                    val prev = HistoryStore.previous(applicationContext, r.startedAt, r.ssid)
+                    val diff = HistoryStore.diff(prev, r)
+                    HistoryStore.save(applicationContext, r)
+                    withContext(Dispatchers.Main) { showDiff(prev != null, diff) }
+                }
             } catch (_: Exception) {
             } finally {
                 withContext(Dispatchers.Main) { setRunning(false) }
             }
         }
+    }
+
+    private fun showDiff(hadPrevious: Boolean, diff: AuditDiff) {
+        if (!hadPrevious) { toast("Erster Scan gespeichert – ab jetzt wird verglichen."); return }
+        if (diff.isEmpty()) { toast("Keine Änderungen seit dem letzten Scan."); return }
+        val msg = buildString {
+            if (diff.newHosts.isNotEmpty()) appendLine("Neue Hosts:\n  ${diff.newHosts.joinToString(", ")}\n")
+            if (diff.goneHosts.isNotEmpty()) appendLine("Verschwundene Hosts:\n  ${diff.goneHosts.joinToString(", ")}\n")
+            if (diff.newPorts.isNotEmpty()) appendLine("Neue offene Ports:\n  ${diff.newPorts.joinToString(", ")}\n")
+            if (diff.newFindings.isNotEmpty()) appendLine("Neue Findings:\n  ${diff.newFindings.joinToString("\n  ")}")
+        }.trim()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Änderungen seit letztem Scan")
+            .setMessage(msg)
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     private fun stopAudit() {

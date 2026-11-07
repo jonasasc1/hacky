@@ -70,15 +70,16 @@ Bereich: ${h(r.rangeFrom)}–${h(r.rangeTo)} &nbsp;•&nbsp; ${ts(r.startedAt)} 
 
         // hosts
         sb.append("""<div class="card"><h3>Hosts & offene Ports</h3><table>
-<tr><th>IP</th><th>Name / Hersteller</th><th>Offene Ports</th></tr>""")
+<tr><th>IP</th><th>Name / Hersteller</th><th>TCP (offen)</th><th>UDP</th></tr>""")
         for (ha in r.hosts) {
             val ports = ha.openPorts.joinToString(", ") {
                 val mark = if (it.insecure) " ⚠" else ""
                 "${it.port}/${it.service}$mark"
             }
+            val udp = ha.udpPorts.joinToString(", ")
             val name = listOfNotNull(ha.host.hostname, ha.host.vendor).joinToString(" • ")
             sb.append("""<tr><td><code>${h(ha.host.ip)}</code>${if (ha.host.isGateway) " <span class=small>(GW)</span>" else ""}</td>
-<td>${h(name)}</td><td>${h(ports)}</td></tr>""")
+<td>${h(name)}</td><td>${h(ports)}</td><td>${h(udp)}</td></tr>""")
         }
         sb.append("</table></div>")
 
