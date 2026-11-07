@@ -13,11 +13,12 @@ VERSION_CODE="$CODE" VERSION_NAME="$NAME" ./gradlew :app:assembleRelease
 cp app/build/outputs/apk/release/app-release.apk "/tmp/$APK"
 
 echo ">> Aktualisiere dist-Branch ..."
+TMP="_pub_$$"
 WT="$(mktemp -d)"
 git worktree add --detach "$WT" >/dev/null
 (
   cd "$WT"
-  git switch --orphan dist
+  git switch --orphan "$TMP"          # leerer orphan-Branch (eindeutiger Name)
   cp "/tmp/$APK" "$APK"
   cat > latest.json <<EOF
 {
@@ -29,7 +30,8 @@ git worktree add --detach "$WT" >/dev/null
 EOF
   git add "$APK" latest.json
   git commit -qm "dist: NetAudit v$CODE"
-  git push -f origin dist
+  git push -f origin "HEAD:dist"       # ersetzt den dist-Branch am Remote
 )
-git worktree remove --force "$WT"
+git worktree remove --force "$WT" 2>/dev/null || true
+git branch -D "$TMP" 2>/dev/null || true
 echo ">> Fertig. Installierte Apps finden v$CODE unter 'App-Update'."
