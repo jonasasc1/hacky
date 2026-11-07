@@ -10,7 +10,8 @@ data class TrafficEvent(
     val domain: String?,
     val kind: String,           // "HTTP (Klartext)", "TLS", "DNS", "andere"
     val detail: String?,
-    val insecure: Boolean
+    val insecure: Boolean,
+    val captureId: String? = null   // set for cleartext HTTP: opens readable content
 )
 
 /** Process-wide sink for traffic events produced by the VPN service. */
@@ -41,5 +42,5 @@ object TrafficLog {
 
     @Synchronized fun snapshot(): List<TrafficEvent> = ArrayList(events)
 
-    @Synchronized fun clear() { events.clear(); plaintextCount = 0 }
+    @Synchronized fun clear() { events.clear(); plaintextCount = 0; HttpCaptureStore.clear() }
 }

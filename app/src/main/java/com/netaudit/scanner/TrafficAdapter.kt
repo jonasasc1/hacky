@@ -10,7 +10,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TrafficAdapter : RecyclerView.Adapter<TrafficAdapter.VH>() {
+class TrafficAdapter(
+    private val onClick: (TrafficEvent) -> Unit = {}
+) : RecyclerView.Adapter<TrafficAdapter.VH>() {
 
     private val items = ArrayList<TrafficEvent>()
     private val fmt = SimpleDateFormat("HH:mm:ss", Locale.GERMANY)
@@ -42,8 +44,11 @@ class TrafficAdapter : RecyclerView.Adapter<TrafficAdapter.VH>() {
         holder.b.sub.text = listOfNotNull(
             fmt.format(Date(e.time)),
             if (e.domain != null) "${e.dstIp}:${e.port}" else null,
-            e.detail
+            e.detail,
+            if (e.captureId != null) "⇢ Inhalt ansehen" else null
         ).joinToString("  •  ")
+        holder.b.root.setOnClickListener { if (e.captureId != null) onClick(e) }
+        holder.b.root.isClickable = e.captureId != null
     }
 
     override fun getItemCount() = items.size

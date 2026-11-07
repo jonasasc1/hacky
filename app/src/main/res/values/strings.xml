@@ -34,7 +34,12 @@
     <string name="no_history">Noch keine Scans gespeichert.\nStarte einen „Vollständigen Audit".</string>
 
     <string name="traffic_title">Traffic-Monitor (Beta)</string>
-    <string name="traffic_hint">Lokaler VPN-Mitschnitt NUR dieses Geräts: zeigt, welche Verbindung im Klartext (HTTP) statt verschlüsselt (TLS) läuft, plus DNS-Namen. Kein Zugriff auf fremde Geräte. Beta – auf echtem Gerät testen; bei Problemen einfach stoppen.</string>
+    <string name="traffic_hint">Lokaler VPN-Mitschnitt NUR dieses Geräts: zeigt, welche Verbindung im Klartext (HTTP) statt verschlüsselt (TLS) läuft, plus DNS-Namen. Tippe eine rote HTTP-Zeile an, um den mitlesbaren Inhalt zu sehen. Kein Zugriff auf fremde Geräte. Beta – auf echtem Gerät testen; bei Problemen einfach stoppen.</string>
+    <string name="readable_content">Mitlesbarer Inhalt</string>
+    <string name="attacker_can_read">Das kann ein Angreifer im selben Netz mitlesen</string>
+    <string name="request_label">Anfrage (an den Server gesendet)</string>
+    <string name="response_label">Antwort (vom Server empfangen)</string>
+    <string name="capture_gone">Inhalt nicht mehr verfügbar (Puffer geleert).</string>
     <string name="traffic_start">Mitschnitt starten</string>
     <string name="traffic_stop">Mitschnitt stoppen</string>
     <string name="clear">Leeren</string>

@@ -26,7 +26,12 @@ class TrafficActivity : AppCompatActivity(), TrafficLog.Listener {
         setContentView(binding.root)
         title = getString(R.string.traffic_title)
 
-        adapter = TrafficAdapter()
+        adapter = TrafficAdapter { e ->
+            startActivity(
+                android.content.Intent(this, HttpDetailActivity::class.java)
+                    .putExtra(HttpDetailActivity.EXTRA_ID, e.captureId)
+            )
+        }
         binding.trafficList.layoutManager = LinearLayoutManager(this)
         binding.trafficList.adapter = adapter
 

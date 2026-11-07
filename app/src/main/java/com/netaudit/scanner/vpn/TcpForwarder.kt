@@ -32,6 +32,7 @@ class TcpForwarder(
         var clientSeqNext = 0L
         @Volatile var established = false
         var firstInspected = false
+        @Volatile var captureId: String? = null
         val key = "$clientPort>$remoteIp:$remotePort"
     }
 
@@ -92,7 +93,12 @@ class TcpForwarder(
                 when {
                     seq == c.clientSeqNext -> {
                         val payload = packet.copyOfRange(dataOff, dataOff + payloadLen)
-                        if (!c.firstInspected) { c.firstInspected = true; classifyAndLog(c, payload) }
+                        if (!c.firstInspected) {
+                            c.firstInspected = true
+                            classifyAndLog(c, payload)
+                        } else {
+                            c.captureId?.let { HttpCaptureStore.get(it)?.appendRequest(payload, 0, payload.size) }
+                        }
                         writeAll(c, payload)
                         c.clientSeqNext = (c.clientSeqNext + payloadLen) and MASK
                         sendAck(c)
@@ -121,8 +127,15 @@ class TcpForwarder(
             Classifier.Kind.TLS -> "TLS (verschlüsselt)"
             Classifier.Kind.OTHER -> "andere"
         }
+        var captureId: String? = null
+        if (insecure) {
+            captureId = "${c.key}@${System.currentTimeMillis()}"
+            c.captureId = captureId
+            HttpCaptureStore.create(captureId, domain ?: ipStr, c.remotePort)
+                .appendRequest(payload, 0, payload.size)
+        }
         TrafficLog.add(TrafficEvent(System.currentTimeMillis(), "TCP", ipStr, c.remotePort,
-            domain, kind, cls.detail, insecure))
+            domain, kind, cls.detail, insecure, captureId))
     }
 
     private fun writeAll(c: Conn, data: ByteArray) {
@@ -159,6 +172,7 @@ class TcpForwarder(
                         val n = c.channel.read(buf)
                         if (n > 0) {
                             buf.flip(); val data = ByteArray(n); buf.get(data)
+                            c.captureId?.let { HttpCaptureStore.get(it)?.appendResponse(data, 0, n) }
                             synchronized(c) {
                                 sendData(c, data)
                                 c.mySeq = (c.mySeq + n) and MASK

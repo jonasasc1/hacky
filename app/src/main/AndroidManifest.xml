@@ -64,6 +64,12 @@
             android:label="@string/traffic_title"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".HttpDetailActivity"
+            android:exported="false"
+            android:label="@string/readable_content"
+            android:parentActivityName=".TrafficActivity" />
+
         <service
             android:name=".vpn.TrafficMonitorService"
             android:permission="android.permission.BIND_VPN_SERVICE"
