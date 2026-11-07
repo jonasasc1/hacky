@@ -76,6 +76,9 @@ class MainActivity : AppCompatActivity() {
         binding.trafficButton.setOnClickListener {
             startActivity(Intent(this, TrafficActivity::class.java))
         }
+        binding.updateButton.setOnClickListener {
+            startActivity(Intent(this, UpdateActivity::class.java))
+        }
 
         // Preload the offline OUI vendor database off the UI thread.
         lifecycleScope.launch(Dispatchers.IO) { OuiLookup.ensureLoaded(applicationContext) }

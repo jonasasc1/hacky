@@ -13,8 +13,13 @@ android {
         applicationId = "com.netaudit.scanner"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // CI sets these from the git tag (v<N>); local builds default to 1 / 1.0.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("VERSION_NAME") ?: "1.0"
+
+        // Repository the in-app updater checks for new GitHub Releases.
+        buildConfigField("String", "GITHUB_OWNER", "\"jonasasc1\"")
+        buildConfigField("String", "GITHUB_REPO", "\"hacky\"")
     }
 
     // Release signing is configured only if keystore.properties exists (kept out of git).
@@ -57,6 +62,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

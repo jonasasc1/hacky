@@ -38,4 +38,17 @@
     <string name="traffic_start">Mitschnitt starten</string>
     <string name="traffic_stop">Mitschnitt stoppen</string>
     <string name="clear">Leeren</string>
+
+    <string name="update_title">App-Update</string>
+    <string name="current_version">Installierte Version: %1$s</string>
+    <string name="check_update">Nach Update suchen</string>
+    <string name="download_install">Herunterladen &amp; installieren</string>
+    <string name="update_checking">Suche nach Updates …</string>
+    <string name="update_none">Du hast die neueste Version.</string>
+    <string name="update_available">Update verfügbar: %1$s</string>
+    <string name="update_downloading">Lade herunter …</string>
+    <string name="update_installing">Starte Installation …</string>
+    <string name="update_ready">Bereit zur Installation.</string>
+    <string name="update_failed">Update fehlgeschlagen. Später erneut versuchen.</string>
+    <string name="update_need_permission">Bitte „Installieren unbekannter Apps" für NetAudit erlauben, dann erneut tippen.</string>
 </resources>

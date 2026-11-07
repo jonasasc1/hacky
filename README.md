@@ -93,6 +93,48 @@ Ohne `keystore.properties` wird der Release-Build **unsigniert** erzeugt
 (CI-tauglich). **Bewahre den Keystore sicher auf** – geht er verloren, kannst
 du keine App-Updates mehr unter derselben Signatur veröffentlichen.
 
+## App-Update (Self-Update über GitHub Releases)
+
+Die App kann sich selbst aktualisieren (Screen **„App-Update"** im Hauptmenü):
+sie fragt das neueste GitHub-Release ab, vergleicht die Version und lädt bei
+Bedarf die neue APK direkt herunter und installiert sie.
+
+**Voraussetzungen**
+- Das Repository ist **öffentlich** (sonst bräuchte der Check einen Token –
+  wird bewusst nicht in die App eingebaut).
+- Jedes Release ist mit **demselben Keystore** signiert wie die installierte App
+  (sonst verweigert Android das Update).
+- Konvention: Release-Tag = `v<versionCode>` (`v1`, `v2`, …), die APK hängt als
+  Asset am Release.
+
+### Variante A – automatisch per CI (empfohlen)
+
+`.github/workflows/release.yml` baut und veröffentlicht bei jedem Tag `v*`
+automatisch ein signiertes Release. Einmalig in GitHub unter
+*Settings → Secrets and variables → Actions* anlegen:
+
+| Secret | Wert |
+|---|---|
+| `KEYSTORE_BASE64` | Ausgabe von `base64 -w0 netaudit-release.jks` |
+| `KEYSTORE_PASSWORD` | Store-Passwort |
+| `KEY_ALIAS` | `netaudit` |
+| `KEY_PASSWORD` | Key-Passwort |
+
+Dann ein Release ausliefern:
+
+```bash
+git tag v2 && git push origin v2     # CI baut v2, signiert, veröffentlicht
+```
+
+Die bereits installierte App findet v2 unter „App-Update".
+
+### Variante B – lokal
+
+```bash
+./scripts/release.sh 2 1.1           # baut netaudit-v2.apk (versionCode 2)
+gh release create v2 netaudit-v2.apk --generate-notes
+```
+
 ## Installieren
 
 ```bash
