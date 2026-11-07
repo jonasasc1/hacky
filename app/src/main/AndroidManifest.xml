@@ -55,5 +55,20 @@
             android:exported="false"
             android:label="@string/history"
             android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".TrafficActivity"
+            android:exported="false"
+            android:label="@string/traffic_title"
+            android:parentActivityName=".MainActivity" />
+
+        <service
+            android:name=".vpn.TrafficMonitorService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -28,6 +28,19 @@ eine ausdrückliche Erlaubnis hast**.
 - **Export**: Host-Liste und Port-Scan-Ergebnisse als **CSV** oder **JSON**
   über den Android-Dateidialog (Storage Access Framework, keine Speicher-
   Berechtigung nötig).
+- **Vollständiger Audit (One-Button)**: Host-Discovery → mDNS/SSDP → Port-Scan →
+  Security-Probes in einem Durchlauf, mit Live-Findings nach Schweregrad und
+  HTML-/CSV-/JSON-Report.
+- **Security-Findings (read-only, keine Brute-Force)**: unverschlüsseltes HTTP,
+  Basic-Auth über HTTP, Telnet/FTP-Klartext, veraltetes/abgelaufenes/selbst-
+  signiertes TLS, fehlendes HSTS, offenes Redis/Elasticsearch, VNC ohne Auth,
+  SNMP-Default-Community „public", **SMBv1** aktiv, Default-Credential-Hinweise.
+- **UDP-Scan**: DNS (inkl. offener-Resolver-Erkennung), NTP, NetBIOS.
+- **Scan-Verlauf + Diff**: jeder Audit wird gespeichert; nach dem Scan zeigt die
+  App „was ist neu im Netz" (neue/verschwundene Hosts, neue Ports, neue Findings).
+- **Traffic-Monitor (Beta, VpnService)**: lokaler Mitschnitt **nur des eigenen
+  Geräts** – zeigt pro Verbindung Klartext-HTTP (mit Host/URL) vs. TLS (mit SNI)
+  und DNS-Namen. Sieht keine fremden Geräte (auf Android ohne Root nicht möglich).
 
 ### Was die App bewusst NICHT tut
 Sie schneidet **keinen fremden Datenverkehr** mit. Auf nicht gerooteten Android-Geräten
