@@ -1,0 +1,6 @@
+{
+  "versionCode": 3,
+  "versionName": "1.2",
+  "notes": "Neu: Traffic-Monitor zeigt bei unverschlüsselten (HTTP) Verbindungen den mitlesbaren Inhalt – Logins, Cookies, Tokens, Formulardaten. Rote Zeile antippen. TLS bleibt verschlüsselt.",
+  "apk": "netaudit-v3.apk"
+}
