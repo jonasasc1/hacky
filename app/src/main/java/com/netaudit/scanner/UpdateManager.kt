@@ -15,14 +15,18 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * In-app self-update via GitHub Releases. The app queries the latest release of
- * the configured repository, compares its version to the installed one and, if
- * newer, downloads the attached APK and hands it to the system installer.
+ * In-app self-update via a manifest committed to the repository and served by
+ * raw.githubusercontent.com (no GitHub Release / token / CI secret needed). The
+ * app reads "latest.json" on the update branch, compares its version to the
+ * installed one and, if newer, downloads the referenced APK and hands it to the
+ * system installer.
  *
- * Convention: each release is tagged "v<versionCode>" (v1, v2, …) and has the
- * release APK attached as an asset. The repository must be public so the check
- * and download work without a token. Updates must be signed with the SAME
- * keystore as the installed app, otherwise Android refuses to install them.
+ * Manifest (latest.json) format:
+ *   { "versionCode": 2, "versionName": "1.1", "notes": "…", "apk": "netaudit-v2.apk" }
+ *
+ * The repository must be public so the check and download work without a token.
+ * Updates must be signed with the SAME keystore as the installed app, otherwise
+ * Android refuses to install them.
  */
 object UpdateManager {
 
@@ -34,15 +38,17 @@ object UpdateManager {
         val apkName: String
     )
 
-    private fun api() =
-        "https://api.github.com/repos/${BuildConfig.GITHUB_OWNER}/${BuildConfig.GITHUB_REPO}/releases/latest"
+    private fun rawBase() =
+        "https://raw.githubusercontent.com/${BuildConfig.GITHUB_OWNER}/" +
+            "${BuildConfig.GITHUB_REPO}/${BuildConfig.UPDATE_BRANCH}"
 
-    /** Returns update info only if a strictly newer release with an APK exists. */
+    /** Returns update info only if the manifest advertises a strictly newer build. */
     suspend fun check(): UpdateInfo? = withContext(Dispatchers.IO) {
-        val conn = (URL(api()).openConnection() as HttpURLConnection).apply {
+        val url = "${rawBase()}/latest.json?nocache=${System.currentTimeMillis()}"
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
-            setRequestProperty("Accept", "application/vnd.github+json")
             setRequestProperty("User-Agent", "NetAudit-Updater")
+            setRequestProperty("Cache-Control", "no-cache")
             connectTimeout = 10000; readTimeout = 10000
             instanceFollowRedirects = true
         }
@@ -50,23 +56,14 @@ object UpdateManager {
             if (conn.responseCode != 200) return@withContext null
             val json = conn.inputStream.bufferedReader().use { it.readText() }
             val o = JSONObject(json)
-            val tag = o.optString("tag_name", "")
-            val latestCode = Regex("(\\d+)").find(tag)?.groupValues?.get(1)?.toIntOrNull()
-                ?: return@withContext null
-            val notes = o.optString("body", "").ifBlank { "Keine Änderungshinweise." }
-            val name = o.optString("name", tag)
-            val assets = o.optJSONArray("assets") ?: return@withContext null
-            var apkUrl: String? = null; var apkName: String? = null
-            for (i in 0 until assets.length()) {
-                val a = assets.getJSONObject(i)
-                val an = a.optString("name", "")
-                if (an.endsWith(".apk", true)) {
-                    apkUrl = a.optString("browser_download_url", ""); apkName = an; break
-                }
-            }
-            if (apkUrl.isNullOrBlank()) return@withContext null
+            val latestCode = o.optInt("versionCode", -1)
+            if (latestCode < 0) return@withContext null
+            val name = o.optString("versionName", "v$latestCode")
+            val notes = o.optString("notes", "").ifBlank { "Keine Änderungshinweise." }
+            val apk = o.optString("apk", "")
+            if (apk.isBlank()) return@withContext null
             if (latestCode <= BuildConfig.VERSION_CODE) return@withContext null
-            UpdateInfo(latestCode, name, notes, apkUrl, apkName ?: "netaudit-update.apk")
+            UpdateInfo(latestCode, name, notes, "${rawBase()}/$apk", apk)
         } catch (_: Exception) {
             null
         } finally {

@@ -17,9 +17,10 @@ android {
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = System.getenv("VERSION_NAME") ?: "1.0"
 
-        // Repository the in-app updater checks for new GitHub Releases.
+        // The in-app updater reads a manifest committed to the repo (raw.githubusercontent).
         buildConfigField("String", "GITHUB_OWNER", "\"jonasasc1\"")
         buildConfigField("String", "GITHUB_REPO", "\"hacky\"")
+        buildConfigField("String", "UPDATE_BRANCH", "\"dist\"")
     }
 
     // Release signing is configured only if keystore.properties exists (kept out of git).
