@@ -61,6 +61,9 @@ class MainActivity : AppCompatActivity() {
             DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         )
 
+        binding.auditButton.setOnClickListener {
+            startActivity(Intent(this, AuditActivity::class.java))
+        }
         binding.scanButton.setOnClickListener { startScan() }
         binding.stopButton.setOnClickListener { stopScan() }
         binding.discoveryButton.setOnClickListener {

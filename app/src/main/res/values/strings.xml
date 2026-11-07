@@ -24,4 +24,10 @@
     <string name="nothing_to_export">Nichts zu exportieren – zuerst scannen.</string>
     <string name="exported">Exportiert.</string>
     <string name="export_failed">Export fehlgeschlagen.</string>
+
+    <string name="full_audit">Vollständiger Audit</string>
+    <string name="start_audit">Audit starten</string>
+    <string name="report">Report</string>
+    <string name="report_format">Report-Format wählen</string>
+    <string name="findings">Findings</string>
 </resources>

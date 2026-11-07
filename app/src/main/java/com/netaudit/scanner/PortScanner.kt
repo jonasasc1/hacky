@@ -12,7 +12,9 @@ import java.net.Socket
 data class OpenPort(
     val port: Int,
     val service: String,
-    val banner: String?
+    val banner: String?,
+    var info: String? = null,
+    var insecure: Boolean = false
 )
 
 object PortScanner {

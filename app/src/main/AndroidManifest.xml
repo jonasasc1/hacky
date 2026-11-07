@@ -43,5 +43,11 @@
             android:exported="false"
             android:label="@string/discovery_title"
             android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".AuditActivity"
+            android:exported="false"
+            android:label="@string/full_audit"
+            android:parentActivityName=".MainActivity" />
     </application>
 </manifest>
